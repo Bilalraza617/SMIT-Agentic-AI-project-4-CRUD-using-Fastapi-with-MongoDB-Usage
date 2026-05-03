@@ -35,10 +35,12 @@ if not is_port_in_use(8000):
 
 if not hasattr(st, "already_warned_secrets") and not is_port_in_use(8000): # Just a rough check
     try:
-        if "MONGODB_URL" not in st.secrets:
-            st.warning("⚠️ MONGODB_URL is not found in Streamlit Secrets! Please add it in your App Settings -> Secrets.")
-    except Exception:
-        st.warning("⚠️ Streamlit Secrets are not configured! Please configure them in App Settings.")
+        keys = list(st.secrets.keys())
+        if "MONGODB_URL" not in keys:
+            st.error(f"❌ MONGODB_URL is missing! Found secrets: {keys}. Please go to Streamlit Cloud Settings -> Secrets and add MONGODB_URL.")
+            st.info("Example format:\nMONGODB_URL=\"mongodb+srv://...\"")
+    except Exception as e:
+        st.error(f"❌ Could not read Streamlit Secrets: {e}")
     st.already_warned_secrets = True
 
 # Define the FastAPI backend URL
