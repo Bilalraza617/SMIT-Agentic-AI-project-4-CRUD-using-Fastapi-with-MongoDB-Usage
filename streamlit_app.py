@@ -18,9 +18,11 @@ if not is_port_in_use(8000):
     env = os.environ.copy()
     
     # Try to load from Streamlit secrets if running on Streamlit Cloud
+    secrets_found = False
     try:
         if "MONGODB_URL" in st.secrets:
             env["MONGODB_URL"] = st.secrets["MONGODB_URL"]
+            secrets_found = True
         if "DATABASE_NAME" in st.secrets:
             env["DATABASE_NAME"] = st.secrets["DATABASE_NAME"]
         if "PROJECT_NAME" in st.secrets:
@@ -30,6 +32,14 @@ if not is_port_in_use(8000):
         
     subprocess.Popen([sys.executable, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000"], env=env)
     time.sleep(2)  # Give the backend a moment to start
+
+if not hasattr(st, "already_warned_secrets") and not is_port_in_use(8000): # Just a rough check
+    try:
+        if "MONGODB_URL" not in st.secrets:
+            st.warning("⚠️ MONGODB_URL is not found in Streamlit Secrets! Please add it in your App Settings -> Secrets.")
+    except Exception:
+        st.warning("⚠️ Streamlit Secrets are not configured! Please configure them in App Settings.")
+    st.already_warned_secrets = True
 
 # Define the FastAPI backend URL
 API_URL = "http://127.0.0.1:8000/api/v1/users/"
