@@ -6,13 +6,29 @@ import subprocess
 import sys
 import time
 
+import os
+
 # Auto-start FastAPI server in the background if it's not running
 def is_port_in_use(port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         return s.connect_ex(('127.0.0.1', port)) == 0
 
 if not is_port_in_use(8000):
-    subprocess.Popen([sys.executable, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000"])
+    # Pass environment variables to the FastAPI subprocess
+    env = os.environ.copy()
+    
+    # Try to load from Streamlit secrets if running on Streamlit Cloud
+    try:
+        if "MONGODB_URL" in st.secrets:
+            env["MONGODB_URL"] = st.secrets["MONGODB_URL"]
+        if "DATABASE_NAME" in st.secrets:
+            env["DATABASE_NAME"] = st.secrets["DATABASE_NAME"]
+        if "PROJECT_NAME" in st.secrets:
+            env["PROJECT_NAME"] = st.secrets["PROJECT_NAME"]
+    except Exception:
+        pass
+        
+    subprocess.Popen([sys.executable, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000"], env=env)
     time.sleep(2)  # Give the backend a moment to start
 
 # Define the FastAPI backend URL
