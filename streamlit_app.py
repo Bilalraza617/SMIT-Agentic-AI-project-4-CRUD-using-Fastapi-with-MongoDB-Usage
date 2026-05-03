@@ -1,6 +1,19 @@
 import streamlit as st
 import requests
 import pandas as pd
+import socket
+import subprocess
+import sys
+import time
+
+# Auto-start FastAPI server in the background if it's not running
+def is_port_in_use(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('127.0.0.1', port)) == 0
+
+if not is_port_in_use(8000):
+    subprocess.Popen([sys.executable, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000"])
+    time.sleep(2)  # Give the backend a moment to start
 
 # Define the FastAPI backend URL
 API_URL = "http://127.0.0.1:8000/api/v1/users/"
